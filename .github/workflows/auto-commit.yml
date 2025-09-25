@@ -2,32 +2,45 @@ name: Auto-commit every 3 days
 
 on:
   schedule:
-    # Runs every 3 days at 9:00 AM UTC (adjust timezone as needed)
+    # Runs every 3 days at 9:00 AM UTC (3:00 PM German time in winter, 4:00 PM in summer)
     - cron: '0 9 */3 * *'
-  workflow_dispatch: # Allows manual triggering
+  workflow_dispatch: # Allows manual triggering from GitHub interface
 
 jobs:
   auto-commit:
     runs-on: ubuntu-latest
+    permissions:
+      contents: write  # Required to push commits
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
         with:
+          fetch-depth: 0  # Fetch full history
           token: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Configure git
         run: |
-          git config --local user.email "action@github.com"
-          git config --local user.name "GitHub Action"
+          git config --local user.email "julius.grote@auto-commit"
+          git config --local user.name "Auto-Commit Bot"
 
       - name: Check for changes and commit
         run: |
-          git add .
-          if git diff --staged --quiet; then
-            echo "No changes to commit"
-          else
+          # Check if there are any changes (including untracked files)
+          if [[ -n $(git status --porcelain) ]]; then
+            git add .
             timestamp=$(date '+%Y-%m-%d %H:%M:%S UTC')
-            git commit -m "Auto-commit: $timestamp"
-            git push
-            echo "Auto-commit completed at $timestamp"
+            changed_files=$(git diff --staged --name-only | wc -l)
+            git commit -m "Auto-commit: $timestamp ($changed_files files changed)
+
+            Updated files:
+            $(git diff --staged --name-only | sed 's/^/- /')"
+            git push origin master
+            echo "Auto-commit completed at $timestamp with $changed_files files"
+          else
+            echo "No changes to commit"
           fi
+
+      - name: Log completion
+        run: |
+          echo "Auto-commit workflow completed at $(date)"
+          echo "Next scheduled run: $(date -d '+3 days' '+%Y-%m-%d at 09:00 UTC')"
