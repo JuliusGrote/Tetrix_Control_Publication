@@ -1,0 +1,26 @@
+# Windows
+desktop.ini
+Thumbs.db
+*.tmp
+*.temp
+
+# Google Drive
+.~lock.*
+~$*
+
+# Auto-commit logs
+.auto-commit.log
+.auto-commit.lock
+
+# PowerShell execution policy files
+*.ps1.log
+
+# Office temporary files
+~*.docx
+~*.xlsx
+~*.pptx
+
+# Backup files
+*.bak
+*.backup
+*~
